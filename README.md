@@ -49,35 +49,40 @@ pnpm preview
 
 ```text
 src/
-├── core/               ← Framework-level primitives
-│   ├── router.js       ← History-based SPA router (~80 lines)
-│   ├── store.js        ← Reactive state container (~50 lines)
-│   └── dom.js          ← DOM creation utilities (~60 lines)
+├── core/                  ← Framework-level primitives
+│   ├── router.js          ← History-based SPA router (~80 lines)
+│   ├── store.js           ← Reactive state container (~50 lines)
+│   └── dom.js             ← DOM creation utilities (~60 lines)
 │
 ├── api/
-│   └── client.js       ← HTTP client with cache/dedupe/abort (~70 lines)
+│   └── client.js          ← HTTP client with cache/dedupe/abort (~70 lines)
 │
-├── components/         ← Reusable UI components
-│   ├── Button.js       ← Multi-variant button
-│   ├── Card.js         ← Content card
-│   ├── Badge.js        ← Status badge
-│   ├── Loader.js       ← Spinner & skeleton placeholders
-│   ├── Toast.js        ← Notification system
-│   ├── ErrorState.js   ← Error display with retry
-│   ├── EmptyState.js   ← Empty data placeholder
-│   ├── UserCard.js     ← User list card + skeleton
-│   └── FeatureCard.js  ← Feature showcase card
+├── styles/                ← Global CSS layers
+│   ├── tokens.css         ← Design tokens (colors, spacing, typography)
+│   ├── base.css           ← Reset & element defaults
+│   ├── layout.css         ← Header, nav, footer, container, shared view patterns
+│   └── animations.css     ← Shared keyframes (viewEnter, spin, shimmer, pulse)
 │
-├── views/              ← Page-level components (one per route)
-│   ├── HomeView.js     ← Landing page with feature showcase
-│   ├── CounterView.js  ← State management demo
-│   ├── UsersView.js    ← Data fetching demo (list)
-│   ├── UserDetailView.js ← Dynamic route params demo
-│   ├── AboutView.js    ← Architecture documentation
-│   └── NotFoundView.js ← 404 page
+├── components/            ← Reusable UI components (JS + co-located CSS)
+│   ├── Button.js / .css   ← Multi-variant button
+│   ├── Card.js / .css     ← Content card
+│   ├── Badge.js / .css    ← Status badge
+│   ├── Loader.js / .css   ← Spinner & skeleton placeholders
+│   ├── Toast.js / .css    ← Notification system
+│   ├── EmptyState.js/.css ← Empty data + error state shared styles
+│   ├── ErrorState.js      ← Error display with retry (uses EmptyState.css)
+│   ├── UserCard.js / .css ← User list card + skeleton + avatar
+│   └── FeatureCard.js/.css← Feature showcase card
 │
-├── styles.css          ← Design system (tokens → components → views)
-└── main.js             ← Entry point (wiring only)
+├── views/                 ← Page-level components (JS + co-located CSS)
+│   ├── HomeView.js / .css ← Landing page with feature showcase
+│   ├── CounterView.js/.css← State management demo
+│   ├── UsersView.js / .css← Data fetching demo (list grid)
+│   ├── UserDetailView.js/.css ← Dynamic route params demo
+│   ├── AboutView.js / .css← Architecture documentation
+│   └── NotFoundView.js/.css ← 404 page
+│
+└── main.js                ← Entry point (wiring only, imports global CSS)
 ```
 
 ### Design Decisions
@@ -108,9 +113,15 @@ el("button", { class: "btn btn--primary", onClick: handler }, ["Click me"]);
 
 No virtual DOM, no diffing. State changes trigger a full view re-render via `replaceChildren()`. For this scale (~10 users, ~5 views), this is imperceptibly fast.
 
-#### CSS Design System (`styles.css`)
+#### CSS Architecture (co-located modules)
 
-Token-based design with CSS custom properties. Dark mode via `[data-theme="dark"]` overrides. BEM-lite naming for component scoping. No utility framework — hand-written CSS demonstrating modern techniques.
+Styles are split into **19 modular CSS files** across three layers:
+
+1. **Global** (`src/styles/`) — Design tokens, reset, layout shell, and shared keyframes. Imported once in `main.js`.
+2. **Component** (`src/components/*.css`) — Each component's CSS lives next to its JS and is imported by it (`import "./Button.css"`).
+3. **View** (`src/views/*.css`) — Page-specific styles co-located with the view, including their own responsive breakpoints.
+
+Vite bundles all imported CSS into a single optimized stylesheet at build time, so co-location has **zero runtime cost** — it's purely a DX improvement. Token-based design with CSS custom properties. Dark mode via `[data-theme="dark"]` overrides. BEM-lite naming for component scoping. No utility framework.
 
 ## Pages
 
