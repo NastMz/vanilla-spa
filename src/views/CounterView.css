@@ -1,0 +1,53 @@
+/* CounterView — Counter display and controls */
+
+.counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-6);
+  padding: var(--s-8) 0;
+}
+.counter__display {
+  width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-surface);
+  border: 2px solid var(--c-border);
+  border-radius: var(--r-full);
+  box-shadow: var(--shadow-lg);
+  transition:
+    border-color var(--t-fast),
+    box-shadow var(--t-fast);
+}
+.counter__display:hover {
+  border-color: var(--c-primary);
+}
+.counter__value {
+  font-size: var(--fs-5xl);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--c-primary);
+  transition: transform var(--t-fast);
+}
+.counter__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+.counter__hint {
+  font-size: var(--fs-sm);
+  color: var(--c-text-muted);
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .counter__display {
+    width: 140px;
+    height: 140px;
+  }
+  .counter__value {
+    font-size: var(--fs-4xl);
+  }
+}

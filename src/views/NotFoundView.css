@@ -1,0 +1,38 @@
+/* NotFoundView — 404 page */
+
+.not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--s-20) var(--s-4);
+  gap: var(--s-4);
+}
+.not-found__code {
+  font-size: 8rem;
+  font-weight: var(--fw-bold);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  background: linear-gradient(
+    135deg,
+    var(--c-primary) 0%,
+    var(--c-accent) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.not-found__title {
+  font-size: var(--fs-2xl);
+}
+.not-found__text {
+  color: var(--c-text-3);
+  max-width: 400px;
+  line-height: var(--lh-relaxed);
+}
+
+@media (max-width: 768px) {
+  .not-found__code {
+    font-size: 5rem;
+  }
+}

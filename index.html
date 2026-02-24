@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description"
+    content="A lightweight Single Page Application built with Vanilla JavaScript — no frameworks, no dependencies." />
+  <title>Vanilla SPA — Lightweight JS Architecture</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◆</text></svg>" />
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container header__inner">
+      <a href="/" data-link class="logo">
+        <span class="logo__icon" aria-hidden="true">◆</span>
+        <span class="logo__text">VanillaSPA</span>
+      </a>
+
+      <nav class="nav" id="main-nav" role="navigation" aria-label="Main navigation">
+        <a href="/" data-link class="nav__link" data-path="/">Home</a>
+        <a href="/counter" data-link class="nav__link" data-path="/counter">Counter</a>
+        <a href="/users" data-link class="nav__link" data-path="/users">Users</a>
+        <a href="/about" data-link class="nav__link" data-path="/about">About</a>
+      </nav>
+
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle theme">
+        <span class="theme-toggle__icon theme-toggle__icon--light" aria-hidden="true">☀️</span>
+        <span class="theme-toggle__icon theme-toggle__icon--dark" aria-hidden="true">🌙</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main content — router outlet -->
+  <main id="app" class="main"></main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <p>Built with <strong>zero dependencies</strong> — Vanilla JavaScript, modern CSS &amp; Vite.</p>
+      <p class="footer__links">
+        <a href="https://github.com/NastMz/vanilla-spa" target="_blank" rel="noopener">GitHub</a>
+        <span class="footer__sep">·</span>
+        <a href="/about" data-link>Architecture</a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Toast notification container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>

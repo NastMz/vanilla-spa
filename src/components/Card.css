@@ -1,0 +1,33 @@
+/* Card — Content container */
+
+.card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: var(--s-6);
+  transition:
+    border-color var(--t-fast),
+    box-shadow var(--t-fast),
+    transform var(--t-fast),
+    background-color var(--t-slow);
+}
+
+.card--hoverable {
+  cursor: pointer;
+}
+.card--hoverable:hover {
+  border-color: var(--c-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.card__title {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  margin-bottom: var(--s-1);
+}
+.card__subtitle {
+  font-size: var(--fs-sm);
+  color: var(--c-text-3);
+  margin-bottom: var(--s-4);
+}

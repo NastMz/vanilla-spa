@@ -1,0 +1,73 @@
+/* UserCard — User list card + skeleton + avatar */
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-full);
+  background: var(--c-primary-light);
+  color: var(--c-primary);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-sm);
+  flex-shrink: 0;
+  user-select: none;
+}
+.avatar--lg {
+  width: 80px;
+  height: 80px;
+  font-size: var(--fs-xl);
+}
+
+.user-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-4);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: var(--s-5);
+  cursor: pointer;
+  transition:
+    border-color var(--t-fast),
+    box-shadow var(--t-fast),
+    transform var(--t-fast);
+}
+.user-card:hover {
+  border-color: var(--c-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.user-card__info {
+  flex: 1;
+  min-width: 0;
+}
+.user-card__name {
+  font-size: var(--fs-base);
+  font-weight: var(--fw-semibold);
+  margin-bottom: var(--s-1);
+}
+.user-card__email {
+  font-size: var(--fs-sm);
+  color: var(--c-primary);
+  margin-bottom: var(--s-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.user-card__company {
+  font-size: var(--fs-xs);
+  color: var(--c-text-muted);
+}
+
+/* Skeleton cards for loading state */
+.user-card-skeleton {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-4);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: var(--s-5);
+}
