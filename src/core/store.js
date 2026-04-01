@@ -7,11 +7,15 @@
  *  - Subscriber notifications are synchronous — predictable, debuggable.
  *  - structuredClone on initial state prevents accidental external mutation.
  *  - Optional selector in get() enables reading slices without destructuring.
+ *  - This store owns shared or persistent state; ephemeral view-local state
+ *    now belongs in `src/core/signals.js` so cross-view responsibilities stay clear.
  *
  * Why not Proxy?
  *  For this project's scope, explicit get/set is simpler to reason about
  *  and debug. Proxies add hidden complexity that isn't justified until
- *  you need granular reactivity (per-property tracking).
+ *  you need granular reactivity (per-property tracking). For local, disposable
+ *  interaction state, use the explicit signals primitive instead of growing this
+ *  store into a second responsibility bucket.
  */
 
 export function createStore(initialState) {
@@ -33,8 +37,8 @@ export function createStore(initialState) {
      *
      * @param {object | Function} patchOrFn
      * @example
-     *   store.set({ count: 5 })
-     *   store.set(prev => ({ count: prev.count + 1 }))
+     *   store.set({ users: { status: 'loading', data: null, error: null } })
+     *   store.set(prev => ({ session: { ...prev.session, ready: true } }))
      */
     set(patchOrFn) {
       const patch =

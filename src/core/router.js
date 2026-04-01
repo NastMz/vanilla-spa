@@ -13,13 +13,14 @@
 
 /**
  * @param {Object}   config
- * @param {Array}    config.routes    — [{ path: '/users/:id', view: (params) => Node }]
- * @param {Function} config.notFound  — () => Node
+ * @param {Array}    config.routes    — [{ path: '/users/:id', view: (params) => Node | { node, scope } }]
+ * @param {Function} config.notFound  — () => Node | { node, scope }
  * @param {Element}  config.root      — container element
  * @param {Function} [config.onNavigate] — called after each render with (pathname, params)
  */
 export function createRouter({ routes, notFound, root, onNavigate }) {
   if (!root) throw new Error("[Router] root element is required");
+  let activeScope = null;
 
   // Pre-compile route patterns once at init
   const compiled = routes.map((route) => ({
@@ -45,9 +46,13 @@ export function createRouter({ routes, notFound, root, onNavigate }) {
   function render() {
     const pathname = globalThis.location.pathname;
     const result = match(pathname);
-    const view = result ? result.route.view(result.params) : notFound();
+    const mountedView = normalizeViewResult(
+      result ? result.route.view(result.params) : notFound(),
+    );
 
-    root.replaceChildren(view);
+    activeScope?.dispose();
+    root.replaceChildren(mountedView.node);
+    activeScope = mountedView.scope;
     onNavigate?.(pathname, result?.params);
   }
 
@@ -78,4 +83,18 @@ function compilePath(path) {
     return "([^/]+)";
   });
   return { regex: new RegExp(`^${pattern}$`), keys };
+}
+
+function normalizeViewResult(viewResult) {
+  if (viewResult instanceof Node) {
+    return { node: viewResult, scope: null };
+  }
+
+  if (viewResult?.node instanceof Node) {
+    return { node: viewResult.node, scope: viewResult.scope ?? null };
+  }
+
+  throw new Error(
+    "[Router] view() must return a Node or an object shaped like { node, scope }",
+  );
 }

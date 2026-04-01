@@ -25,7 +25,6 @@ import { NotFoundView } from "./views/NotFoundView.js";
 // Single global state. Each view reads/writes the slices it owns.
 
 export const store = createStore({
-  count: 0,
   users: { status: "idle", data: null, error: null },
 });
 
@@ -37,7 +36,7 @@ const appRoot = document.querySelector("#app");
 const router = createRouter({
   routes: [
     { path: "/", view: () => HomeView({ navigate: router.navigate }) },
-    { path: "/counter", view: () => CounterView({ store }) },
+    { path: "/counter", view: () => CounterView() },
     {
       path: "/users",
       view: () => UsersView({ store, navigate: router.navigate }),
@@ -55,8 +54,8 @@ const router = createRouter({
 });
 
 // ── Re-render on state changes ────────────────────────────────
-// Simple strategy: any state change re-renders the current route view.
-// Fast enough for this scale — DOM creation from pure functions is cheap.
+// Simple strategy: any shared-store change re-renders the current route view.
+// Views may also manage ephemeral local state through router-owned scopes.
 
 store.subscribe(() => router.render());
 

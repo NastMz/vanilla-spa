@@ -21,7 +21,7 @@ Modern frameworks are great, but they often obscure what's actually happening. T
 | Feature                 | Implementation                                           |
 | ----------------------- | -------------------------------------------------------- |
 | **Client-side routing** | `history.pushState` with dynamic params (`/users/:id`)   |
-| **State management**    | Reactive store with `get()`, `set()`, `subscribe()`      |
+| **State management**    | Global store plus local signals with explicit disposal   |
 | **Data fetching**       | HTTP client with TTL cache, request deduplication, abort |
 | **Component model**     | Pure functions → DOM nodes (composable, testable)        |
 | **Design system**       | CSS custom properties, dark mode, fluid typography       |
@@ -51,7 +51,8 @@ pnpm preview
 src/
 ├── core/                  ← Framework-level primitives
 │   ├── router.js          ← History-based SPA router (~80 lines)
-│   ├── store.js           ← Reactive state container (~50 lines)
+│   ├── store.js           ← Shared/persistent state container (~50 lines)
+│   ├── signals.js         ← Local reactive primitives with scope disposal
 │   └── dom.js             ← DOM creation utilities (~60 lines)
 │
 ├── api/
@@ -95,6 +96,42 @@ Routes are an **ordered array** (not an object map) to support dynamic segments.
 
 A single state object with **shallow-merge immutable updates**. Subscribers are notified synchronously. No Proxy, no deep observation — explicit `get()`/`set()` is easier to reason about and debug at this scale.
 
+#### State Ownership and Local Signals
+
+State needs a clear owner or it turns into a mess. In this architecture, **signals own ephemeral view state**, **the store owns shared or persistent state**, and **the router owns URL state plus mount/unmount timing**. That boundary matters more than the reactive primitive itself.
+
+The signals layer stays intentionally small so it does not grow into a home-made framework:
+
+- **Local-only** — Signals live inside one view or component subtree and are disposed with it.
+- **No app-wide graph** — Cross-view or persistent data still belongs in `core/store.js`.
+- **No template/runtime magic** — No custom compiler, decorators, proxy traps, or DOM binding DSL.
+- **Lifecycle first** — Effects must be created inside an explicit scope and cleaned up on unmount.
+
+Minimal API:
+
+```javascript
+const count = signal(0);
+const doubled = computed(() => count.get() * 2);
+
+const scope = createScope();
+scope.run(() => {
+  effect(() => {
+    console.log(doubled.get());
+  });
+});
+
+scope.dispose();
+```
+
+- `signal(initial)` — mutable local value with `get()` / `set(next)`
+- `computed(fn)` — derived read-only value; invalidation is dependency-driven, so downstream observers may rerun even if the final value does not change
+- `effect(fn)` — reactive side effect, registered to the active scope
+- `createScope()` / `dispose()` — explicit lifecycle boundary for cleanup
+
+Conceptually, this plugs into the current lifecycle without changing responsibilities: the router still mounts and unmounts views, the store still triggers cross-view re-renders, and a view-level scope is created when a signal-enabled view starts and disposed right before its DOM is replaced. The goal is better local interaction state, not a second global state system.
+
+The first rollout lives in `src/views/CounterView.js`: the counter interaction uses local signals, remounting the route recreates fresh local state, and the existing global store still owns shared flows like users and user details.
+
 #### API Client (`api/client.js`)
 
 Three features you'd want in any production app:
@@ -128,7 +165,7 @@ Vite bundles all imported CSS into a single optimized stylesheet at build time, 
 | Route        | Description                                                 |
 | ------------ | ----------------------------------------------------------- |
 | `/`          | Landing page with feature showcase and tech stack           |
-| `/counter`   | Interactive counter demonstrating persistent state          |
+| `/counter`   | Interactive counter demonstrating local ephemeral state     |
 | `/users`     | User grid with loading skeletons, cache, and error handling |
 | `/users/:id` | Dynamic route — individual user profile                     |
 | `/about`     | Architecture documentation (built as a view)                |

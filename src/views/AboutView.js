@@ -31,7 +31,8 @@ export function AboutView() {
       `src/
 ├── core/               ← Framework-level primitives
 │   ├── router.js       ← History-based SPA router
-│   ├── store.js        ← Reactive state container
+│   ├── store.js        ← Shared/persistent state container
+│   ├── signals.js      ← Local reactive primitives + scope disposal
 │   └── dom.js          ← DOM creation utilities (el, text, fragment)
 │
 ├── api/
@@ -120,6 +121,28 @@ export function AboutView() {
         el("code", {}, ["replaceChildren()"]),
         " batches the DOM update.",
       ]),
+      el("li", {}, [
+        el("strong", {}, ["Ownership boundary"]),
+        " — Shared or persistent data stays in the store, while ephemeral interaction state can live in ",
+        el("code", {}, ["core/signals.js"]),
+        " and be disposed with the mounted route scope.",
+      ]),
+    ]),
+
+    el("h3", {}, ["Local Signals"]),
+    el("p", {}, [
+      "The app now includes a tiny local-signals primitive for view-scoped state: ",
+      el("code", {}, ["signal()"]),
+      ", ",
+      el("code", {}, ["computed()"]),
+      ", ",
+      el("code", {}, ["effect()"]),
+      ", and ",
+      el("code", {}, ["createScope()"]),
+      ". The router disposes the active scope before replacing the current route so effects do not leak across navigation.",
+    ]),
+    el("p", {}, [
+      "That means the counter demo now shows ephemeral local state instead of abusing the global store. Users and user detail flows still rely on the store because they are shared, async, and cross-view concerns.",
     ]),
 
     // ── Data Fetching ──
@@ -205,7 +228,7 @@ function Toolbar() {
     el("ul", {}, [
       el("li", {}, [
         el("strong", {}, ["Full re-render"]),
-        " — Every state change re-renders the entire view. For this app it's imperceptible, but a larger app would need targeted updates or a virtual DOM.",
+        " — Every shared-store state change re-renders the entire view. For this app it's imperceptible, but a larger app would need targeted updates or a virtual DOM.",
       ]),
       el("li", {}, [
         el("strong", {}, ["No SSR"]),
