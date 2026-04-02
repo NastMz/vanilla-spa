@@ -6,7 +6,7 @@
  *  - Pattern matching via lightweight regex (no path-to-regexp dependency).
  *  - View transitions handled via CSS class — the router simply mounts new DOM;
  *    the `view` CSS class triggers an enter animation automatically.
- *  - Scroll-to-top on navigation for a native-app feel.
+ *  - Scroll-to-top on navigation for a native-app feel when the platform supports it.
  *  - `onNavigate` callback enables side-effects (active nav, analytics)
  *    without coupling the router to the DOM layout.
  */
@@ -44,8 +44,8 @@ export function createRouter({ routes, notFound, root, onNavigate }) {
 
   /** Render the view matching the current URL */
   function render() {
-    const pathname = globalThis.location.pathname;
-    const result = match(pathname);
+    const pathname = getCurrentPathname();
+    const result = pathname ? match(pathname) : null;
     const mountedView = normalizeViewResult(
       result ? result.route.view(result.params) : notFound(),
     );
@@ -53,19 +53,26 @@ export function createRouter({ routes, notFound, root, onNavigate }) {
     activeScope?.dispose();
     root.replaceChildren(mountedView.node);
     activeScope = mountedView.scope;
-    onNavigate?.(pathname, result?.params);
+    onNavigate?.(pathname ?? "", result?.params);
   }
 
   /** Navigate programmatically */
   function navigate(path) {
-    if (globalThis.location.pathname === path) return;
-    history.pushState({}, "", path);
-    window.scrollTo({ top: 0, behavior: "instant" });
+    if (getCurrentPathname() === path) return;
+    if (!canPushHistory()) return;
+
+    try {
+      globalThis.history.pushState({}, "", path);
+    } catch {
+      return;
+    }
+
+    safeScrollToTop();
     render();
   }
 
   // Handle browser back/forward
-  globalThis.addEventListener("popstate", render);
+  subscribeToPopstate(render);
 
   return { render, navigate, match };
 }
@@ -97,4 +104,40 @@ function normalizeViewResult(viewResult) {
   throw new Error(
     "[Router] view() must return a Node or an object shaped like { node, scope }",
   );
+}
+
+function getCurrentPathname() {
+  try {
+    return globalThis.location?.pathname ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function canListenPopstate() {
+  return typeof globalThis.addEventListener === "function";
+}
+
+function canPushHistory() {
+  return typeof globalThis.history?.pushState === "function";
+}
+
+function subscribeToPopstate(listener) {
+  if (!canListenPopstate()) return;
+
+  try {
+    globalThis.addEventListener("popstate", listener);
+  } catch {
+    // Ignore platform listener failures.
+  }
+}
+
+function safeScrollToTop() {
+  if (typeof globalThis.scrollTo !== "function") return;
+
+  try {
+    globalThis.scrollTo({ top: 0, behavior: "instant" });
+  } catch {
+    // Ignore scroll reset failures.
+  }
 }

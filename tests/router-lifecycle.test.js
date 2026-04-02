@@ -102,3 +102,128 @@ test("remount creates a fresh local scope and resets ephemeral state", () => {
     cleanupDom(dom);
   }
 });
+
+test("router renders without crashing when popstate subscription is unavailable", () => {
+  const dom = installDom({
+    url: "https://example.test/about",
+    overrides: { addEventListener: undefined },
+  });
+
+  try {
+    const root = document.getElementById("app");
+
+    const router = createRouter({
+      routes: [{ path: "/about", view: () => document.createElement("section") }],
+      notFound: () => document.createElement("div"),
+      root,
+    });
+
+    assert.doesNotThrow(() => router.render());
+    assert.equal(root.firstElementChild?.tagName, "SECTION");
+  } finally {
+    cleanupDom(dom);
+  }
+});
+
+test("router navigate is a safe no-op when history support is unavailable", () => {
+  const dom = installDom({
+    url: "https://example.test/counter",
+    overrides: { history: {} },
+  });
+
+  try {
+    const root = document.getElementById("app");
+
+    const router = createRouter({
+      routes: [
+        { path: "/counter", view: () => document.createTextNode("counter") },
+        { path: "/about", view: () => document.createTextNode("about") },
+      ],
+      notFound: () => document.createElement("div"),
+      root,
+    });
+
+    router.render();
+
+    assert.doesNotThrow(() => router.navigate("/about"));
+    assert.equal(root.textContent, "counter");
+  } finally {
+    cleanupDom(dom);
+  }
+});
+
+test("router wires popstate, pushState and scroll reset on happy path navigation", () => {
+  const addEventListenerCalls = [];
+  const pushStateCalls = [];
+  const scrollToCalls = [];
+  const dom = installDom({
+    url: "https://example.test/counter",
+    overrides: {
+      addEventListener: (eventName, listener, options) => {
+        addEventListenerCalls.push([eventName, listener, options]);
+      },
+      history: {
+        pushState: (...args) => {
+          pushStateCalls.push(args);
+          globalThis.location = new URL(args[2], "https://example.test");
+        },
+      },
+      scrollTo: (...args) => {
+        scrollToCalls.push(args);
+      },
+    },
+  });
+
+  try {
+    const root = document.getElementById("app");
+
+    const router = createRouter({
+      routes: [
+        { path: "/counter", view: () => document.createTextNode("counter") },
+        { path: "/about", view: () => document.createTextNode("about") },
+      ],
+      notFound: () => document.createElement("div"),
+      root,
+    });
+
+    router.render();
+    router.navigate("/about");
+
+    assert.equal(addEventListenerCalls.length, 1);
+    assert.equal(addEventListenerCalls[0][0], "popstate");
+    assert.equal(typeof addEventListenerCalls[0][1], "function");
+    assert.deepEqual(pushStateCalls, [[{}, "", "/about"]]);
+    assert.deepEqual(scrollToCalls, [[{ top: 0, behavior: "instant" }]]);
+    assert.equal(root.textContent, "about");
+  } finally {
+    cleanupDom(dom);
+  }
+});
+
+test("router falls back to not found when pathname cannot be read", () => {
+  const dom = installDom({
+    url: "https://example.test/counter",
+    overrides: {
+      location: {
+        get pathname() {
+          throw new Error("denied");
+        },
+      },
+    },
+  });
+
+  try {
+    const root = document.getElementById("app");
+
+    const router = createRouter({
+      routes: [{ path: "/counter", view: () => document.createTextNode("counter") }],
+      notFound: () => document.createTextNode("not-found"),
+      root,
+    });
+
+    assert.doesNotThrow(() => router.render());
+    assert.equal(root.textContent, "not-found");
+  } finally {
+    cleanupDom(dom);
+  }
+});

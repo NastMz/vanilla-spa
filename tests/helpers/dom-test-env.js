@@ -3,6 +3,7 @@ import { JSDOM } from "jsdom";
 const trackedGlobals = new Map();
 
 export function installDom(options = {}) {
+  const overrides = options.overrides ?? {};
   const dom = new JSDOM(
     options.html ??
       "<!doctype html><html><body><div id=\"app\"></div><div id=\"toast-container\"></div></body></html>",
@@ -19,23 +20,50 @@ export function installDom(options = {}) {
   bindGlobal("Event", dom.window.Event);
   bindGlobal("CustomEvent", dom.window.CustomEvent);
   bindGlobal("navigator", dom.window.navigator);
-  bindGlobal("history", dom.window.history);
-  bindGlobal("location", dom.window.location);
-  bindGlobal("localStorage", dom.window.localStorage);
+  bindGlobal(
+    "history",
+    pickOverride(overrides, "history", dom.window.history),
+  );
+  bindGlobal(
+    "location",
+    pickOverride(overrides, "location", dom.window.location),
+  );
+  bindGlobal(
+    "localStorage",
+    pickOverride(overrides, "localStorage", dom.window.localStorage),
+  );
   bindGlobal("requestAnimationFrame", (callback) => {
     callback(0);
     return 1;
   });
   bindGlobal("cancelAnimationFrame", () => {});
-  bindGlobal("scrollTo", () => {});
-  bindGlobal("addEventListener", dom.window.addEventListener.bind(dom.window));
+  bindGlobal("scrollTo", pickOverride(overrides, "scrollTo", () => {}));
+  bindGlobal(
+    "addEventListener",
+    pickOverride(
+      overrides,
+      "addEventListener",
+      dom.window.addEventListener.bind(dom.window),
+    ),
+  );
   bindGlobal(
     "removeEventListener",
-    dom.window.removeEventListener.bind(dom.window),
+    pickOverride(
+      overrides,
+      "removeEventListener",
+      dom.window.removeEventListener.bind(dom.window),
+    ),
   );
-  bindGlobal("dispatchEvent", dom.window.dispatchEvent.bind(dom.window));
+  bindGlobal(
+    "dispatchEvent",
+    pickOverride(
+      overrides,
+      "dispatchEvent",
+      dom.window.dispatchEvent.bind(dom.window),
+    ),
+  );
 
-  dom.window.scrollTo = () => {};
+  dom.window.scrollTo = pickOverride(overrides, "windowScrollTo", () => {});
 
   return dom;
 }
@@ -64,4 +92,12 @@ function bindGlobal(name, value) {
     writable: true,
     value,
   });
+}
+
+function pickOverride(overrides, name, fallback) {
+  if (Object.prototype.hasOwnProperty.call(overrides, name)) {
+    return overrides[name];
+  }
+
+  return fallback;
 }

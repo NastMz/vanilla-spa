@@ -13,6 +13,7 @@ import "./styles/animations.css";
 
 import { createStore } from "./core/store.js";
 import { createRouter } from "./core/router.js";
+import { createSafeStorage } from "./core/storage.js";
 
 import { HomeView } from "./views/HomeView.js";
 import { CounterView } from "./views/CounterView.js";
@@ -91,15 +92,17 @@ function updateActiveNav(pathname) {
 
 // ── Theme toggle ──────────────────────────────────────────────
 
+const safeStorage = createSafeStorage();
+
 const themeToggle = document.getElementById("theme-toggle");
-const savedTheme = localStorage.getItem("theme") || "light";
+const savedTheme = safeStorage.getItem("theme", "light");
 document.documentElement.dataset.theme = savedTheme;
 
 themeToggle?.addEventListener("click", () => {
   const current = document.documentElement.dataset.theme;
   const next = current === "dark" ? "light" : "dark";
   document.documentElement.dataset.theme = next;
-  localStorage.setItem("theme", next);
+  safeStorage.setItem("theme", next);
 });
 
 // ── Initial render ────────────────────────────────────────────
